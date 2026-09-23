@@ -41,12 +41,7 @@ router.post('/signin', async (req, res) => {
   });
 });
 
-router.post('/signout', async (req, res) => {
-  const header = req.headers.authorization;
-  if (header && header.startsWith('Bearer ')) {
-    const token = header.substring(7);
-    await supabase.auth.signOut(token);
-  }
+router.post('/signout', async (_req, res) => {
   res.json({ success: true });
 });
 
