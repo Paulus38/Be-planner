@@ -1,8 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
+const express_1 = __importDefault(require("express"));
 const auth_1 = require("../middleware/auth");
-const router = express_1.Router;
+const router = express_1.default.Router();
 const ALLOWED_TABLES = new Set([
     'books',
     'study_sessions',
@@ -17,8 +20,7 @@ const ALLOWED_TABLES = new Set([
     'study_subjects',
     'daily_progress',
 ]);
-const crud = router();
-crud.use(auth_1.authMiddleware);
+router.use(auth_1.authMiddleware);
 function getTable(req) {
     return req.params.table;
 }
@@ -30,7 +32,7 @@ function validateTable(req, res) {
     }
     return true;
 }
-crud.get('/:table', async (req, res) => {
+router.get('/:table', async (req, res) => {
     if (!validateTable(req, res))
         return;
     const client = req.userClient;
@@ -75,7 +77,7 @@ crud.get('/:table', async (req, res) => {
     }
     res.json({ data });
 });
-crud.post('/:table', async (req, res) => {
+router.post('/:table', async (req, res) => {
     if (!validateTable(req, res))
         return;
     const client = req.userClient;
@@ -87,7 +89,7 @@ crud.post('/:table', async (req, res) => {
     }
     res.json({ data });
 });
-crud.put('/:table', async (req, res) => {
+router.put('/:table', async (req, res) => {
     if (!validateTable(req, res))
         return;
     const client = req.userClient;
@@ -107,7 +109,7 @@ crud.put('/:table', async (req, res) => {
     }
     res.json({ data });
 });
-crud.delete('/:table', async (req, res) => {
+router.delete('/:table', async (req, res) => {
     if (!validateTable(req, res))
         return;
     const client = req.userClient;
@@ -135,5 +137,5 @@ crud.delete('/:table', async (req, res) => {
     }
     res.json({ success: true });
 });
-exports.default = crud;
+exports.default = router;
 //# sourceMappingURL=crud.js.map

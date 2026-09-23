@@ -1,7 +1,7 @@
-import { Router, Request, Response } from 'express';
+import express, { Request, Response } from 'express';
 import { authMiddleware, AuthedRequest } from '../middleware/auth';
 
-const router = Router;
+const router = express.Router();
 
 const ALLOWED_TABLES = new Set([
   'books',
@@ -18,9 +18,7 @@ const ALLOWED_TABLES = new Set([
   'daily_progress',
 ]);
 
-const crud = router();
-
-crud.use(authMiddleware);
+router.use(authMiddleware);
 
 function getTable(req: AuthedRequest) {
   return req.params.table;
@@ -35,7 +33,7 @@ function validateTable(req: AuthedRequest, res: Response): boolean {
   return true;
 }
 
-crud.get('/:table', async (req: AuthedRequest, res) => {
+router.get('/:table', async (req: AuthedRequest, res: Response) => {
   if (!validateTable(req, res)) return;
   const client = req.userClient!;
   const { select, order, limit, filter_field, filter_value, filter_in, single, maybe_single } = req.query;
@@ -88,7 +86,7 @@ crud.get('/:table', async (req: AuthedRequest, res) => {
   res.json({ data });
 });
 
-crud.post('/:table', async (req: AuthedRequest, res) => {
+router.post('/:table', async (req: AuthedRequest, res: Response) => {
   if (!validateTable(req, res)) return;
   const client = req.userClient!;
   const body = Array.isArray(req.body) ? req.body : [req.body];
@@ -101,7 +99,7 @@ crud.post('/:table', async (req: AuthedRequest, res) => {
   res.json({ data });
 });
 
-crud.put('/:table', async (req: AuthedRequest, res) => {
+router.put('/:table', async (req: AuthedRequest, res: Response) => {
   if (!validateTable(req, res)) return;
   const client = req.userClient!;
   const { filter_field, filter_value } = req.query;
@@ -123,7 +121,7 @@ crud.put('/:table', async (req: AuthedRequest, res) => {
   res.json({ data });
 });
 
-crud.delete('/:table', async (req: AuthedRequest, res) => {
+router.delete('/:table', async (req: AuthedRequest, res: Response) => {
   if (!validateTable(req, res)) return;
   const client = req.userClient!;
   const { filter_field, filter_value, filter_in } = req.query;
@@ -153,4 +151,4 @@ crud.delete('/:table', async (req: AuthedRequest, res) => {
   res.json({ success: true });
 });
 
-export default crud;
+export default router;
