@@ -77,12 +77,12 @@ router.post('/', authMiddleware, async (req: AuthedRequest, res) => {
     await client.from('fixed_activities').insert(fixedActivities);
 
     const subjects = [
-      { name: 'Tiếng Anh', code: 'english', color: '#3b82f6', is_in_english_ratio: true, weekly_goal_min: 315, monthly_goal_min: 1260, sort_order: 1, user_id: userId },
-      { name: 'Việt văn', code: 'vietnamese', color: '#10b981', is_in_english_ratio: true, weekly_goal_min: 105, monthly_goal_min: 420, sort_order: 2, user_id: userId },
-      { name: 'Đàn', code: 'instrument', color: '#f59e0b', is_in_english_ratio: true, weekly_goal_min: 105, monthly_goal_min: 420, sort_order: 3, user_id: userId },
-      { name: 'Đọc sách', code: 'reading', color: '#8b5cf6', is_in_english_ratio: true, weekly_goal_min: 105, monthly_goal_min: 420, sort_order: 4, user_id: userId },
-      { name: 'Ôn bài / Bài tập', code: 'homework', color: '#ef4444', is_in_english_ratio: false, weekly_goal_min: 210, monthly_goal_min: 840, sort_order: 5, user_id: userId },
-      { name: 'Nhật ký thiêng liêng', code: 'journal', color: '#ec4899', is_in_english_ratio: false, weekly_goal_min: 105, monthly_goal_min: 420, sort_order: 6, user_id: userId },
+      { name: 'Tiếng Anh', code: 'english', color: '#3b82f6', icon_name: 'Languages', description: 'Tiếng Anh tổng hợp — từ vựng, ngữ pháp, đọc, nghe, nói, phát âm, dịch.', tags: ['ngôn ngữ', 'tự học'], show_in_nav: true, is_in_english_ratio: true, weekly_goal_min: 315, monthly_goal_min: 1260, sort_order: 1, user_id: userId },
+      { name: 'Việt văn', code: 'vietnamese', color: '#10b981', icon_name: 'PenLine', description: 'Tiếng Việt thực hành và văn nghị luận.', tags: ['ngôn ngữ', 'văn'], show_in_nav: true, is_in_english_ratio: true, weekly_goal_min: 105, monthly_goal_min: 420, sort_order: 2, user_id: userId },
+      { name: 'Đàn', code: 'instrument', color: '#f59e0b', icon_name: 'Music', description: 'Xướng âm, nhạc lý, kỹ thuật và tác phẩm.', tags: ['âm nhạc', 'thực hành'], show_in_nav: true, is_in_english_ratio: true, weekly_goal_min: 105, monthly_goal_min: 420, sort_order: 3, user_id: userId },
+      { name: 'Đọc sách', code: 'reading', color: '#8b5cf6', icon_name: 'BookMarked', description: 'Đọc sách cá nhân và sách chung.', tags: ['đọc'], show_in_nav: true, is_in_english_ratio: true, weekly_goal_min: 105, monthly_goal_min: 420, sort_order: 4, user_id: userId },
+      { name: 'Ôn bài / Bài tập', code: 'homework', color: '#ef4444', icon_name: 'GraduationCap', description: 'Ôn tập và làm bài tập cho các môn chính khóa.', tags: ['ôn tập'], show_in_nav: false, is_in_english_ratio: false, weekly_goal_min: 210, monthly_goal_min: 840, sort_order: 5, user_id: userId },
+      { name: 'Nhật ký thiêng liêng', code: 'journal', color: '#ec4899', icon_name: 'Heart', description: 'Viết nhật ký phản tỉnh mỗi tối.', tags: ['thiêng liêng'], show_in_nav: true, is_in_english_ratio: false, weekly_goal_min: 105, monthly_goal_min: 420, sort_order: 6, user_id: userId },
     ];
     await client.from('study_subjects').insert(subjects);
 
