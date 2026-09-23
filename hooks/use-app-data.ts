@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/components/auth-provider';
 import type {
   Settings,
   FixedActivity,
@@ -30,6 +31,7 @@ export interface AppData {
 }
 
 export function useAppData(): AppData {
+  const { user } = useAuth();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [fixedActivities, setFixedActivities] = useState<FixedActivity[]>([]);
   const [scheduleEntries, setScheduleEntries] = useState<ScheduleEntry[]>([]);
@@ -46,6 +48,11 @@ export function useAppData(): AppData {
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     async function load() {
       setLoading(true);
@@ -62,7 +69,7 @@ export function useAppData(): AppData {
           goalsRes,
           progressRes,
         ] = await Promise.all([
-          supabase.from('settings').select('*').limit(1),
+          supabase.from('settings').select('*').limit(1).maybeSingle(),
           supabase.from('fixed_activities').select('*').order('sort_order'),
           supabase.from('schedule_entries').select('*').order('weekday, sort_order'),
           supabase.from('study_subjects').select('*').order('sort_order'),
@@ -77,7 +84,7 @@ export function useAppData(): AppData {
 
         if (settingsRes.error) throw settingsRes.error;
 
-        setSettings(settingsRes.data?.[0] || null);
+        setSettings(settingsRes.data || null);
         setFixedActivities(fixedRes.data || []);
         setScheduleEntries(scheduleRes.data || []);
         setSubjects(subjectsRes.data || []);
@@ -97,7 +104,7 @@ export function useAppData(): AppData {
     return () => {
       cancelled = true;
     };
-  }, [refreshKey]);
+  }, [refreshKey, user]);
 
   return {
     settings,
