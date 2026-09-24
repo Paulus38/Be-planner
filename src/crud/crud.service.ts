@@ -1,5 +1,4 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { SupabaseService } from '../common/supabase.service';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 const ALLOWED_TABLES = new Set([
@@ -15,34 +14,29 @@ const ALLOWED_TABLES = new Set([
   'fixed_activities',
   'study_subjects',
   'daily_progress',
-  'user_preferences',
+  'user_config',
 ]);
 
 @Injectable()
 export class CrudService {
-  constructor(private readonly supabaseService: SupabaseService) {}
-
   private validateTable(table: string) {
     if (!ALLOWED_TABLES.has(table)) {
       throw new BadRequestException(`Table '${table}' is not allowed`);
     }
   }
 
-  private getClient(token: string): SupabaseClient {
-    return this.supabaseService.createUserClient(token);
-  }
-
-  async getAll(table: string, query: any, token: string) {
+  async getAll(table: string, query: any, client: SupabaseClient, userId: string) {
     this.validateTable(table);
-    const client = this.getClient(token);
 
     let q = client.from(table).select(typeof query.select === 'string' ? query.select : '*');
 
-    if (query.filter_field && query.filter_value) {
+    q = q.eq('user_id', userId);
+
+    if (query.filter_field && query.filter_value && query.filter_field !== 'user_id') {
       q = q.eq(String(query.filter_field), String(query.filter_value));
     }
 
-    if (query.filter_in && query.filter_field) {
+    if (query.filter_in && query.filter_field && query.filter_field !== 'user_id') {
       const values = String(query.filter_in).split(',');
       q = q.in(String(query.filter_field), values);
     }
@@ -79,10 +73,15 @@ export class CrudService {
     return { data };
   }
 
-  async insert(table: string, body: any, token: string) {
+  async insert(table: string, body: any, client: SupabaseClient, userId: string) {
     this.validateTable(table);
-    const client = this.getClient(token);
     const rows = Array.isArray(body) ? body : [body];
+
+    for (const row of rows) {
+      if (typeof row === 'object' && row !== null) {
+        row.user_id = userId;
+      }
+    }
 
     const { data, error } = await client.from(table).insert(rows).select();
     if (error) {
@@ -91,42 +90,44 @@ export class CrudService {
     return { data };
   }
 
-  async update(table: string, query: any, body: any, token: string) {
+  async update(table: string, query: any, body: any, client: SupabaseClient, userId: string) {
     this.validateTable(table);
-    const client = this.getClient(token);
 
     if (!query.filter_field || !query.filter_value) {
       throw new BadRequestException('filter_field and filter_value required for PUT');
     }
 
-    const { data, error } = await client
-      .from(table)
-      .update(body)
-      .eq(String(query.filter_field), String(query.filter_value))
-      .select();
+    let q = client.from(table).update(body).eq('user_id', userId);
+
+    if (query.filter_field !== 'user_id') {
+      q = q.eq(String(query.filter_field), String(query.filter_value));
+    }
+
+    const { data, error } = await q.select();
     if (error) {
       throw new BadRequestException(error.message);
     }
     return { data };
   }
 
-  async remove(table: string, query: any, token: string) {
+  async remove(table: string, query: any, client: SupabaseClient, userId: string) {
     this.validateTable(table);
-    const client = this.getClient(token);
 
     if (!query.filter_field) {
       throw new BadRequestException('filter_field required for DELETE');
     }
 
-    let q = client.from(table).delete();
+    let q = client.from(table).delete().eq('user_id', userId);
 
-    if (query.filter_in) {
-      const values = String(query.filter_in).split(',');
-      q = q.in(String(query.filter_field), values);
-    } else if (query.filter_value) {
-      q = q.eq(String(query.filter_field), String(query.filter_value));
-    } else {
-      throw new BadRequestException('filter_value or filter_in required for DELETE');
+    if (query.filter_field !== 'user_id') {
+      if (query.filter_in) {
+        const values = String(query.filter_in).split(',');
+        q = q.in(String(query.filter_field), values);
+      } else if (query.filter_value) {
+        q = q.eq(String(query.filter_field), String(query.filter_value));
+      } else {
+        throw new BadRequestException('filter_value or filter_in required for DELETE');
+      }
     }
 
     const { error } = await q;

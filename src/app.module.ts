@@ -4,22 +4,30 @@ import { DataModule } from './data/data.module';
 import { CrudModule } from './crud/crud.module';
 import { SeedModule } from './seed/seed.module';
 import { AuthMiddleware } from './common/auth.middleware';
+import { JwtService } from './common/jwt.service';
+import { SupabaseService } from './common/supabase.service';
 import { HealthController } from './common/health.controller';
 import { HealthService } from './common/health.service';
 
 @Module({
   imports: [AuthModule, DataModule, CrudModule, SeedModule],
   controllers: [HealthController],
-  providers: [HealthService],
+  providers: [HealthService,JwtService, SupabaseService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AuthMiddleware)
       .exclude(
-        { path: 'auth/(.*)', method: RequestMethod.ALL },
-        { path: 'health', method: RequestMethod.ALL }, // 👈 Đổi sang RequestMethod.ALL để chặn mọi method vào health
+        { path: 'auth/signup', method: RequestMethod.POST },
+        { path: 'auth/signin', method: RequestMethod.POST },
+        { path: 'auth/signout', method: RequestMethod.POST },
+        { path: 'auth/refresh', method: RequestMethod.POST },
+        { path: 'auth/session', method: RequestMethod.GET },
+        { path: 'seed/templates', method: RequestMethod.GET },
+        { path: 'seed/template', method: RequestMethod.GET },
+        { path: 'health', method: RequestMethod.ALL  },
       )
-      .forRoutes('data', 'seed', ':table');
+      .forRoutes('data', 'seed', 'auth/onboarding', ':table');
   }
 }
