@@ -20,8 +20,10 @@ let SeedController = class SeedController {
         this.seedService = seedService;
     }
     async seed(req) {
-        const token = req.headers.authorization?.substring(7) || '';
-        return this.seedService.seedDefaultData(token);
+        if (!req.userClient || !req.userId) {
+            return { error: 'Not authenticated' };
+        }
+        return this.seedService.seedDefaultData(req.userClient, req.userId);
     }
 };
 exports.SeedController = SeedController;

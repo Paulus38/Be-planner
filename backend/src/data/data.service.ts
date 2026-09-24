@@ -1,14 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseService } from '../common/supabase.service';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 @Injectable()
 export class DataService {
-  constructor(private readonly supabaseService: SupabaseService) {}
-
-  async loadAll(token: string) {
-    const client = this.supabaseService.createUserClient(token);
-
+  async loadAll(client: SupabaseClient) {
     const [
       settingsRes,
       fixedRes,

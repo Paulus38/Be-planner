@@ -1,19 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseService } from '../common/supabase.service';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 @Injectable()
 export class SeedService {
-  constructor(private readonly supabaseService: SupabaseService) {}
-
-  async seedDefaultData(token: string) {
-    const { data: userData, error } = await this.supabaseService.client.auth.getUser(token);
-    if (error || !userData.user) {
-      return { error: 'Invalid token' };
-    }
-    const userId = userData.user.id;
-    const client = this.supabaseService.createUserClient(token);
-
-    // Check if already seeded
+  async seedDefaultData(client: SupabaseClient, userId: string) {
     const { data: existingSettings } = await client
       .from('settings')
       .select('id')
@@ -24,7 +14,6 @@ export class SeedService {
       return { success: true, message: 'Already seeded' };
     }
 
-    // 1. Settings
     await client.from('settings').insert({
       user_id: userId,
       wake_time: '04:25',
@@ -54,7 +43,6 @@ export class SeedService {
       journal_min_min: 15,
     });
 
-    // 2. Fixed activities
     const activities = [
       { name: 'Thánh lễ', start_time: '04:45', end_time: '06:00', category: 'prayer', icon: 'Church', sort_order: 1, user_id: userId },
       { name: 'Ăn sáng', start_time: '06:00', end_time: '08:00', category: 'meal', icon: 'Coffee', sort_order: 2, user_id: userId },
@@ -66,7 +54,6 @@ export class SeedService {
     ];
     await client.from('fixed_activities').insert(activities);
 
-    // 3. Study subjects
     const subjects = [
       { name: 'Tiếng Anh', code: 'english', color: '#3b82f6', icon_name: 'Languages', description: 'Tiếng Anh tổng hợp.', tags: ['ngôn ngữ', 'tự học'], show_in_nav: true, is_in_english_ratio: true, weekly_goal_min: 315, monthly_goal_min: 1260, sort_order: 1, user_id: userId },
       { name: 'Việt văn', code: 'vietnamese', color: '#10b981', icon_name: 'PenLine', description: 'Tiếng Việt thực hành.', tags: ['ngôn ngữ', 'văn'], show_in_nav: true, is_in_english_ratio: true, weekly_goal_min: 105, monthly_goal_min: 420, sort_order: 2, user_id: userId },
@@ -77,7 +64,6 @@ export class SeedService {
     ];
     await client.from('study_subjects').insert(subjects);
 
-    // 4. Schedule entries (default weekly schedule)
     const schedule = [
       { weekday: 1, start_time: '08:00', end_time: '08:45', subject_name: 'Giáo lý HTCG 1', session_type: 'class', sort_order: 1, user_id: userId },
       { weekday: 1, start_time: '08:50', end_time: '09:35', subject_name: 'Tiếng Anh', session_type: 'class', sort_order: 2, user_id: userId },

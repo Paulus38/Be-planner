@@ -10,14 +10,13 @@ exports.SeedModule = void 0;
 const common_1 = require("@nestjs/common");
 const seed_controller_1 = require("./seed.controller");
 const seed_service_1 = require("./seed.service");
-const supabase_service_1 = require("../common/supabase.service");
 let SeedModule = class SeedModule {
 };
 exports.SeedModule = SeedModule;
 exports.SeedModule = SeedModule = __decorate([
     (0, common_1.Module)({
         controllers: [seed_controller_1.SeedController],
-        providers: [seed_service_1.SeedService, supabase_service_1.SupabaseService],
+        providers: [seed_service_1.SeedService],
     })
 ], SeedModule);
 //# sourceMappingURL=seed.module.js.map

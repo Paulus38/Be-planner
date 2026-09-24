@@ -11,13 +11,17 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
+const express_1 = require("express");
 const auth_service_1 = require("./auth.service");
+const jwt_service_1 = require("../common/jwt.service");
 let AuthController = class AuthController {
-    constructor(authService) {
+    constructor(authService, jwtService) {
         this.authService = authService;
+        this.jwtService = jwtService;
     }
     async signUp(body) {
         return this.authService.signUp(body.email, body.password);
@@ -27,6 +31,9 @@ let AuthController = class AuthController {
     }
     async signOut() {
         return { success: true };
+    }
+    async refresh(body) {
+        return this.authService.refreshToken(body.refresh_token);
     }
     async getGoogleUrl() {
         return this.authService.getGoogleUrl();
@@ -40,7 +47,11 @@ let AuthController = class AuthController {
             return { user: null, session: null };
         }
         const token = header.substring(7);
-        return this.authService.getSession(token);
+        const payload = this.jwtService.verify(token);
+        if (!payload) {
+            return { user: null, session: null };
+        }
+        return { user: { id: payload.sub, email: payload.email } };
     }
 };
 exports.AuthController = AuthController;
@@ -65,6 +76,13 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "signOut", null);
 __decorate([
+    (0, common_1.Post)('refresh'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "refresh", null);
+__decorate([
     (0, common_1.Get)('google-url'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -81,11 +99,12 @@ __decorate([
     (0, common_1.Get)('session'),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [typeof (_a = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _a : Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getSession", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
-    __metadata("design:paramtypes", [auth_service_1.AuthService])
+    __metadata("design:paramtypes", [auth_service_1.AuthService,
+        jwt_service_1.JwtService])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map

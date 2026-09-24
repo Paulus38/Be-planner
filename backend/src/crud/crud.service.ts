@@ -1,5 +1,4 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { SupabaseService } from '../common/supabase.service';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 const ALLOWED_TABLES = new Set([
@@ -20,21 +19,14 @@ const ALLOWED_TABLES = new Set([
 
 @Injectable()
 export class CrudService {
-  constructor(private readonly supabaseService: SupabaseService) {}
-
   private validateTable(table: string) {
     if (!ALLOWED_TABLES.has(table)) {
       throw new BadRequestException(`Table '${table}' is not allowed`);
     }
   }
 
-  private getClient(token: string): SupabaseClient {
-    return this.supabaseService.createUserClient(token);
-  }
-
-  async getAll(table: string, query: any, token: string) {
+  async getAll(table: string, query: any, client: SupabaseClient) {
     this.validateTable(table);
-    const client = this.getClient(token);
 
     let q = client.from(table).select(typeof query.select === 'string' ? query.select : '*');
 
@@ -79,9 +71,8 @@ export class CrudService {
     return { data };
   }
 
-  async insert(table: string, body: any, token: string) {
+  async insert(table: string, body: any, client: SupabaseClient) {
     this.validateTable(table);
-    const client = this.getClient(token);
     const rows = Array.isArray(body) ? body : [body];
 
     const { data, error } = await client.from(table).insert(rows).select();
@@ -91,9 +82,8 @@ export class CrudService {
     return { data };
   }
 
-  async update(table: string, query: any, body: any, token: string) {
+  async update(table: string, query: any, body: any, client: SupabaseClient) {
     this.validateTable(table);
-    const client = this.getClient(token);
 
     if (!query.filter_field || !query.filter_value) {
       throw new BadRequestException('filter_field and filter_value required for PUT');
@@ -110,9 +100,8 @@ export class CrudService {
     return { data };
   }
 
-  async remove(table: string, query: any, token: string) {
+  async remove(table: string, query: any, client: SupabaseClient) {
     this.validateTable(table);
-    const client = this.getClient(token);
 
     if (!query.filter_field) {
       throw new BadRequestException('filter_field required for DELETE');

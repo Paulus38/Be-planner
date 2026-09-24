@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const auth_controller_1 = require("./auth.controller");
 const auth_service_1 = require("./auth.service");
 const supabase_service_1 = require("../common/supabase.service");
+const jwt_service_1 = require("../common/jwt.service");
 const onboarding_controller_1 = require("./onboarding.controller");
 const onboarding_service_1 = require("./onboarding.service");
 let AuthModule = class AuthModule {
@@ -19,8 +20,8 @@ exports.AuthModule = AuthModule;
 exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         controllers: [auth_controller_1.AuthController, onboarding_controller_1.OnboardingController],
-        providers: [auth_service_1.AuthService, onboarding_service_1.OnboardingService, supabase_service_1.SupabaseService],
-        exports: [supabase_service_1.SupabaseService],
+        providers: [auth_service_1.AuthService, onboarding_service_1.OnboardingService, supabase_service_1.SupabaseService, jwt_service_1.JwtService],
+        exports: [supabase_service_1.SupabaseService, jwt_service_1.JwtService],
     })
 ], AuthModule);
 //# sourceMappingURL=auth.module.js.map

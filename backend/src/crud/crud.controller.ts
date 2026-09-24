@@ -4,6 +4,12 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { CrudService } from './crud.service';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+interface CrudRequest extends Request {
+  userClient?: SupabaseClient;
+  userId?: string;
+}
 
 @Controller()
 export class CrudController {
@@ -13,20 +19,20 @@ export class CrudController {
   async getAll(
     @Param('table') table: string,
     @Query() query: any,
-    @Req() req: Request,
+    @Req() req: CrudRequest,
   ) {
-    const token = req.headers.authorization?.substring(7) || '';
-    return this.crudService.getAll(table, query, token);
+    if (!req.userClient) throw new BadRequestException('Not authenticated');
+    return this.crudService.getAll(table, query, req.userClient);
   }
 
   @Post(':table')
   async insert(
     @Param('table') table: string,
     @Body() body: any,
-    @Req() req: Request,
+    @Req() req: CrudRequest,
   ) {
-    const token = req.headers.authorization?.substring(7) || '';
-    return this.crudService.insert(table, body, token);
+    if (!req.userClient) throw new BadRequestException('Not authenticated');
+    return this.crudService.insert(table, body, req.userClient);
   }
 
   @Put(':table')
@@ -34,19 +40,19 @@ export class CrudController {
     @Param('table') table: string,
     @Query() query: any,
     @Body() body: any,
-    @Req() req: Request,
+    @Req() req: CrudRequest,
   ) {
-    const token = req.headers.authorization?.substring(7) || '';
-    return this.crudService.update(table, query, body, token);
+    if (!req.userClient) throw new BadRequestException('Not authenticated');
+    return this.crudService.update(table, query, body, req.userClient);
   }
 
   @Delete(':table')
   async remove(
     @Param('table') table: string,
     @Query() query: any,
-    @Req() req: Request,
+    @Req() req: CrudRequest,
   ) {
-    const token = req.headers.authorization?.substring(7) || '';
-    return this.crudService.remove(table, query, token);
+    if (!req.userClient) throw new BadRequestException('Not authenticated');
+    return this.crudService.remove(table, query, req.userClient);
   }
 }

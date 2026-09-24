@@ -30,6 +30,57 @@ function setRefreshToken(token: string | null) {
   }
 }
 
+let isRefreshing = false;
+let refreshPromise: Promise<string | null> | null = null;
+
+async function tryRefreshToken(): Promise<string | null> {
+  if (isRefreshing && refreshPromise) return refreshPromise;
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return null;
+
+  isRefreshing = true;
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${API_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      if (!res.ok) {
+        setToken(null);
+        setRefreshToken(null);
+        cachedAuthState = { user: null, session: null };
+        emitAuthEvent('SIGNED_OUT', null);
+        return null;
+      }
+      const data = await res.json();
+      if (data.token) {
+        setToken(data.token);
+        if (data.session?.refresh_token) {
+          setRefreshToken(data.session.refresh_token);
+        }
+        cachedAuthState = {
+          user: data.user,
+          session: { user: data.user, access_token: data.token, refresh_token: data.session?.refresh_token || refreshToken },
+        };
+        emitAuthEvent('TOKEN_REFRESHED', cachedAuthState.session);
+        return data.token;
+      }
+      return null;
+    } catch {
+      setToken(null);
+      setRefreshToken(null);
+      cachedAuthState = { user: null, session: null };
+      emitAuthEvent('SIGNED_OUT', null);
+      return null;
+    } finally {
+      isRefreshing = false;
+      refreshPromise = null;
+    }
+  })();
+  return refreshPromise;
+}
+
 async function apiFetch(path: string, options: RequestInit = {}): Promise<any> {
   const token = getToken();
   const headers: Record<string, string> = {
@@ -40,14 +91,25 @@ async function apiFetch(path: string, options: RequestInit = {}): Promise<any> {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_URL}${path}`, {
+  let res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers,
   });
 
+  if (res.status === 401 && token) {
+    const newToken = await tryRefreshToken();
+    if (newToken) {
+      headers['Authorization'] = `Bearer ${newToken}`;
+      res = await fetch(`${API_URL}${path}`, {
+        ...options,
+        headers,
+      });
+    }
+  }
+
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: 'Request failed' }));
-    return { error: body.error || `HTTP ${res.status}` };
+    return { error: body.error || body.message || `HTTP ${res.status}` };
   }
 
   return await res.json();
@@ -340,14 +402,14 @@ const authApi = {
       body: JSON.stringify({ email, password }),
     });
     if (result.error) return { data: null, error: { message: result.error } };
-    if (result.session) {
-      setToken(result.session.access_token);
-      setRefreshToken(result.session.refresh_token);
+    if (result.token) {
+      setToken(result.token);
+      setRefreshToken(result.session?.refresh_token || '');
       cachedAuthState = {
         user: result.user,
-        session: result.session,
+        session: { user: result.user, access_token: result.token, refresh_token: result.session?.refresh_token || '' },
       };
-      emitAuthEvent('SIGNED_IN', result.session);
+      emitAuthEvent('SIGNED_IN', cachedAuthState.session);
     }
     return { data: result, error: null };
   },
@@ -358,14 +420,14 @@ const authApi = {
       body: JSON.stringify({ email, password }),
     });
     if (result.error) return { data: null, error: { message: result.error } };
-    if (result.session) {
-      setToken(result.session.access_token);
-      setRefreshToken(result.session.refresh_token);
+    if (result.token) {
+      setToken(result.token);
+      setRefreshToken(result.session?.refresh_token || '');
       cachedAuthState = {
         user: result.user,
-        session: result.session,
+        session: { user: result.user, access_token: result.token, refresh_token: result.session?.refresh_token || '' },
       };
-      emitAuthEvent('SIGNED_IN', result.session);
+      emitAuthEvent('SIGNED_IN', cachedAuthState.session);
     }
     return { data: result, error: null };
   },
@@ -378,37 +440,28 @@ const authApi = {
     emitAuthEvent('SIGNED_OUT', null);
   },
 
-  // Google OAuth — redirect browser to Supabase's Google sign-in page
-  // Supabase redirects back to /auth/callback?code=... after Google authenticates the user
-  signInWithGoogle() {
+  async signInWithGoogle() {
     if (typeof window === 'undefined') return;
-    const callbackUrl = `${window.location.origin}/auth/callback`;
-    const params = new URLSearchParams({
-      client_id: SUPABASE_ANON_KEY,
-      redirect_uri: `${SUPABASE_URL}/auth/v1/callback`,
-      response_type: 'code',
-      scope: 'openid profile email',
-      flow: 'code',
-      state: callbackUrl,
-    });
-    window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&${params.toString()}`;
+    const result = await apiFetch('/auth/google-url');
+    if (result.url) {
+      window.location.href = result.url;
+    }
   },
 
-  // Google OAuth — exchange the authorization code for session tokens
   async exchangeCodeForSession(code: string) {
     const result = await apiFetch('/auth/google/callback', {
       method: 'POST',
       body: JSON.stringify({ code }),
     });
     if (result.error) return { data: null, error: { message: result.error } };
-    if (result.session) {
-      setToken(result.session.access_token);
-      setRefreshToken(result.session.refresh_token);
+    if (result.token) {
+      setToken(result.token);
+      setRefreshToken(result.session?.refresh_token || '');
       cachedAuthState = {
         user: result.user,
-        session: result.session,
+        session: { user: result.user, access_token: result.token, refresh_token: result.session?.refresh_token || '' },
       };
-      emitAuthEvent('SIGNED_IN', result.session);
+      emitAuthEvent('SIGNED_IN', cachedAuthState.session);
     }
     return { data: result, error: null };
   },
@@ -462,3 +515,4 @@ const supabaseCompat = {
 
 export { supabaseCompat as supabase };
 export { onboardingApi as onboarding };
+export { apiFetch };

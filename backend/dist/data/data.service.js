@@ -5,19 +5,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DataService = void 0;
 const common_1 = require("@nestjs/common");
-const supabase_service_1 = require("../common/supabase.service");
 let DataService = class DataService {
-    constructor(supabaseService) {
-        this.supabaseService = supabaseService;
-    }
-    async loadAll(token) {
-        const client = this.supabaseService.createUserClient(token);
+    async loadAll(client) {
         const [settingsRes, fixedRes, scheduleRes, subjectsRes, tasksRes, sessionsRes, journalRes, goalsRes, progressRes,] = await Promise.all([
             client.from('settings').select('*').limit(1).maybeSingle(),
             client.from('fixed_activities').select('*').order('sort_order'),
@@ -44,7 +36,6 @@ let DataService = class DataService {
 };
 exports.DataService = DataService;
 exports.DataService = DataService = __decorate([
-    (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [supabase_service_1.SupabaseService])
+    (0, common_1.Injectable)()
 ], DataService);
 //# sourceMappingURL=data.service.js.map

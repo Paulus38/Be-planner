@@ -20,8 +20,9 @@ let DataController = class DataController {
         this.dataService = dataService;
     }
     async getAll(req) {
-        const token = req.headers.authorization?.substring(7) || '';
-        return this.dataService.loadAll(token);
+        if (!req.userClient)
+            return { error: 'Not authenticated' };
+        return this.dataService.loadAll(req.userClient);
     }
 };
 exports.DataController = DataController;

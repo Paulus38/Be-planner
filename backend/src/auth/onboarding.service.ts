@@ -1,56 +1,40 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { SupabaseService } from '../common/supabase.service';
+import { Injectable } from '@nestjs/common';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 @Injectable()
 export class OnboardingService {
-  constructor(private readonly supabaseService: SupabaseService) {}
-
-  async getStatus(token: string) {
-    const { data: userData, error } = await this.supabaseService.client.auth.getUser(token);
-    if (error || !userData.user) {
-      return { onboarding_completed: false };
-    }
-
-    const userClient = this.supabaseService.createUserClient(token);
-    const { data, error: dbError } = await userClient
+  async getStatus(client: SupabaseClient, userId: string) {
+    const { data, error } = await client
       .from('user_preferences')
       .select('onboarding_completed')
-      .eq('user_id', userData.user.id)
+      .eq('user_id', userId)
       .maybeSingle();
 
-    if (dbError || !data) {
+    if (error || !data) {
       return { onboarding_completed: false };
     }
     return { onboarding_completed: data.onboarding_completed };
   }
 
-  async markComplete(token: string) {
-    const { data: userData, error } = await this.supabaseService.client.auth.getUser(token);
-    if (error || !userData.user) {
-      throw new UnauthorizedException('Invalid token');
-    }
-
-    const userClient = this.supabaseService.createUserClient(token);
-
-    // Upsert: try update first, if no row then insert
-    const { data: existing } = await userClient
+  async markComplete(client: SupabaseClient, userId: string) {
+    const { data: existing } = await client
       .from('user_preferences')
       .select('id')
-      .eq('user_id', userData.user.id)
+      .eq('user_id', userId)
       .maybeSingle();
 
     if (existing) {
-      const { error: updateError } = await userClient
+      const { error: updateError } = await client
         .from('user_preferences')
         .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
-        .eq('user_id', userData.user.id);
+        .eq('user_id', userId);
       if (updateError) {
         throw new Error(updateError.message);
       }
     } else {
-      const { error: insertError } = await userClient
+      const { error: insertError } = await client
         .from('user_preferences')
-        .insert({ user_id: userData.user.id, onboarding_completed: true });
+        .insert({ user_id: userId, onboarding_completed: true });
       if (insertError) {
         throw new Error(insertError.message);
       }

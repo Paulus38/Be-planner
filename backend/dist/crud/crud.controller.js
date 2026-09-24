@@ -20,20 +20,24 @@ let CrudController = class CrudController {
         this.crudService = crudService;
     }
     async getAll(table, query, req) {
-        const token = req.headers.authorization?.substring(7) || '';
-        return this.crudService.getAll(table, query, token);
+        if (!req.userClient)
+            throw new common_1.BadRequestException('Not authenticated');
+        return this.crudService.getAll(table, query, req.userClient);
     }
     async insert(table, body, req) {
-        const token = req.headers.authorization?.substring(7) || '';
-        return this.crudService.insert(table, body, token);
+        if (!req.userClient)
+            throw new common_1.BadRequestException('Not authenticated');
+        return this.crudService.insert(table, body, req.userClient);
     }
     async update(table, query, body, req) {
-        const token = req.headers.authorization?.substring(7) || '';
-        return this.crudService.update(table, query, body, token);
+        if (!req.userClient)
+            throw new common_1.BadRequestException('Not authenticated');
+        return this.crudService.update(table, query, body, req.userClient);
     }
     async remove(table, query, req) {
-        const token = req.headers.authorization?.substring(7) || '';
-        return this.crudService.remove(table, query, token);
+        if (!req.userClient)
+            throw new common_1.BadRequestException('Not authenticated');
+        return this.crudService.remove(table, query, req.userClient);
     }
 };
 exports.CrudController = CrudController;

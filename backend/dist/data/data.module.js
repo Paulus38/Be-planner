@@ -10,14 +10,13 @@ exports.DataModule = void 0;
 const common_1 = require("@nestjs/common");
 const data_controller_1 = require("./data.controller");
 const data_service_1 = require("./data.service");
-const supabase_service_1 = require("../common/supabase.service");
 let DataModule = class DataModule {
 };
 exports.DataModule = DataModule;
 exports.DataModule = DataModule = __decorate([
     (0, common_1.Module)({
         controllers: [data_controller_1.DataController],
-        providers: [data_service_1.DataService, supabase_service_1.SupabaseService],
+        providers: [data_service_1.DataService],
     })
 ], DataModule);
 //# sourceMappingURL=data.module.js.map

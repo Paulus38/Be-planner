@@ -5,25 +5,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SeedService = void 0;
 const common_1 = require("@nestjs/common");
-const supabase_service_1 = require("../common/supabase.service");
 let SeedService = class SeedService {
-    constructor(supabaseService) {
-        this.supabaseService = supabaseService;
-    }
-    async seedDefaultData(token) {
-        const { data: userData, error } = await this.supabaseService.client.auth.getUser(token);
-        if (error || !userData.user) {
-            return { error: 'Invalid token' };
-        }
-        const userId = userData.user.id;
-        const client = this.supabaseService.createUserClient(token);
-        // Check if already seeded
+    async seedDefaultData(client, userId) {
         const { data: existingSettings } = await client
             .from('settings')
             .select('id')
@@ -32,7 +18,6 @@ let SeedService = class SeedService {
         if (existingSettings) {
             return { success: true, message: 'Already seeded' };
         }
-        // 1. Settings
         await client.from('settings').insert({
             user_id: userId,
             wake_time: '04:25',
@@ -61,7 +46,6 @@ let SeedService = class SeedService {
             english_target_pct: 50,
             journal_min_min: 15,
         });
-        // 2. Fixed activities
         const activities = [
             { name: 'Thánh lễ', start_time: '04:45', end_time: '06:00', category: 'prayer', icon: 'Church', sort_order: 1, user_id: userId },
             { name: 'Ăn sáng', start_time: '06:00', end_time: '08:00', category: 'meal', icon: 'Coffee', sort_order: 2, user_id: userId },
@@ -72,7 +56,6 @@ let SeedService = class SeedService {
             { name: 'Kinh tối', start_time: '19:15', end_time: '19:30', category: 'prayer', icon: 'Church', sort_order: 7, user_id: userId },
         ];
         await client.from('fixed_activities').insert(activities);
-        // 3. Study subjects
         const subjects = [
             { name: 'Tiếng Anh', code: 'english', color: '#3b82f6', icon_name: 'Languages', description: 'Tiếng Anh tổng hợp.', tags: ['ngôn ngữ', 'tự học'], show_in_nav: true, is_in_english_ratio: true, weekly_goal_min: 315, monthly_goal_min: 1260, sort_order: 1, user_id: userId },
             { name: 'Việt văn', code: 'vietnamese', color: '#10b981', icon_name: 'PenLine', description: 'Tiếng Việt thực hành.', tags: ['ngôn ngữ', 'văn'], show_in_nav: true, is_in_english_ratio: true, weekly_goal_min: 105, monthly_goal_min: 420, sort_order: 2, user_id: userId },
@@ -82,7 +65,6 @@ let SeedService = class SeedService {
             { name: 'Nhật ký thiêng liêng', code: 'journal', color: '#ec4899', icon_name: 'Heart', description: 'Viết nhật ký phản tỉnh.', tags: ['thiêng liêng'], show_in_nav: true, is_in_english_ratio: false, weekly_goal_min: 105, monthly_goal_min: 420, sort_order: 6, user_id: userId },
         ];
         await client.from('study_subjects').insert(subjects);
-        // 4. Schedule entries (default weekly schedule)
         const schedule = [
             { weekday: 1, start_time: '08:00', end_time: '08:45', subject_name: 'Giáo lý HTCG 1', session_type: 'class', sort_order: 1, user_id: userId },
             { weekday: 1, start_time: '08:50', end_time: '09:35', subject_name: 'Tiếng Anh', session_type: 'class', sort_order: 2, user_id: userId },
@@ -104,7 +86,6 @@ let SeedService = class SeedService {
 };
 exports.SeedService = SeedService;
 exports.SeedService = SeedService = __decorate([
-    (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [supabase_service_1.SupabaseService])
+    (0, common_1.Injectable)()
 ], SeedService);
 //# sourceMappingURL=seed.service.js.map

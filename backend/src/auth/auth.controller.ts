@@ -1,10 +1,14 @@
 import { Controller, Post, Body, Get, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
+import { JwtService } from '../common/jwt.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   @Post('signup')
   async signUp(@Body() body: { email: string; password: string }) {
@@ -19,6 +23,11 @@ export class AuthController {
   @Post('signout')
   async signOut() {
     return { success: true };
+  }
+
+  @Post('refresh')
+  async refresh(@Body() body: { refresh_token: string }) {
+    return this.authService.refreshToken(body.refresh_token);
   }
 
   @Get('google-url')
@@ -38,6 +47,10 @@ export class AuthController {
       return { user: null, session: null };
     }
     const token = header.substring(7);
-    return this.authService.getSession(token);
+    const payload = this.jwtService.verify(token);
+    if (!payload) {
+      return { user: null, session: null };
+    }
+    return { user: { id: payload.sub, email: payload.email } };
   }
 }

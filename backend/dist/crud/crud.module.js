@@ -10,14 +10,13 @@ exports.CrudModule = void 0;
 const common_1 = require("@nestjs/common");
 const crud_controller_1 = require("./crud.controller");
 const crud_service_1 = require("./crud.service");
-const supabase_service_1 = require("../common/supabase.service");
 let CrudModule = class CrudModule {
 };
 exports.CrudModule = CrudModule;
 exports.CrudModule = CrudModule = __decorate([
     (0, common_1.Module)({
         controllers: [crud_controller_1.CrudController],
-        providers: [crud_service_1.CrudService, supabase_service_1.SupabaseService],
+        providers: [crud_service_1.CrudService],
     })
 ], CrudModule);
 //# sourceMappingURL=crud.module.js.map

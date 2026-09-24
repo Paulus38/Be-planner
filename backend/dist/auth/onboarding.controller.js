@@ -20,12 +20,16 @@ let OnboardingController = class OnboardingController {
         this.onboardingService = onboardingService;
     }
     async getStatus(req) {
-        const token = req.headers.authorization?.substring(7) || '';
-        return this.onboardingService.getStatus(token);
+        if (!req.userClient || !req.userId) {
+            return { onboarding_completed: false };
+        }
+        return this.onboardingService.getStatus(req.userClient, req.userId);
     }
     async complete(req) {
-        const token = req.headers.authorization?.substring(7) || '';
-        return this.onboardingService.markComplete(token);
+        if (!req.userClient || !req.userId) {
+            return { error: 'Not authenticated' };
+        }
+        return this.onboardingService.markComplete(req.userClient, req.userId);
     }
 };
 exports.OnboardingController = OnboardingController;

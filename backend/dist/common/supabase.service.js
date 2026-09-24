@@ -39,6 +39,21 @@ let SupabaseService = class SupabaseService {
             },
         });
     }
+    async refreshSession(refreshToken) {
+        const { data, error } = await this.client.auth.refreshSession({
+            refresh_token: refreshToken,
+        });
+        if (error || !data.session) {
+            return null;
+        }
+        return {
+            user: { id: data.user.id, email: data.user.email || '' },
+            session: {
+                access_token: data.session.access_token,
+                refresh_token: data.session.refresh_token,
+            },
+        };
+    }
 };
 exports.SupabaseService = SupabaseService;
 exports.SupabaseService = SupabaseService = __decorate([

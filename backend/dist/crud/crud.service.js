@@ -5,13 +5,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CrudService = void 0;
 const common_1 = require("@nestjs/common");
-const supabase_service_1 = require("../common/supabase.service");
 const ALLOWED_TABLES = new Set([
     'books',
     'study_sessions',
@@ -28,20 +24,13 @@ const ALLOWED_TABLES = new Set([
     'user_preferences',
 ]);
 let CrudService = class CrudService {
-    constructor(supabaseService) {
-        this.supabaseService = supabaseService;
-    }
     validateTable(table) {
         if (!ALLOWED_TABLES.has(table)) {
             throw new common_1.BadRequestException(`Table '${table}' is not allowed`);
         }
     }
-    getClient(token) {
-        return this.supabaseService.createUserClient(token);
-    }
-    async getAll(table, query, token) {
+    async getAll(table, query, client) {
         this.validateTable(table);
-        const client = this.getClient(token);
         let q = client.from(table).select(typeof query.select === 'string' ? query.select : '*');
         if (query.filter_field && query.filter_value) {
             q = q.eq(String(query.filter_field), String(query.filter_value));
@@ -77,9 +66,8 @@ let CrudService = class CrudService {
         }
         return { data };
     }
-    async insert(table, body, token) {
+    async insert(table, body, client) {
         this.validateTable(table);
-        const client = this.getClient(token);
         const rows = Array.isArray(body) ? body : [body];
         const { data, error } = await client.from(table).insert(rows).select();
         if (error) {
@@ -87,9 +75,8 @@ let CrudService = class CrudService {
         }
         return { data };
     }
-    async update(table, query, body, token) {
+    async update(table, query, body, client) {
         this.validateTable(table);
-        const client = this.getClient(token);
         if (!query.filter_field || !query.filter_value) {
             throw new common_1.BadRequestException('filter_field and filter_value required for PUT');
         }
@@ -103,9 +90,8 @@ let CrudService = class CrudService {
         }
         return { data };
     }
-    async remove(table, query, token) {
+    async remove(table, query, client) {
         this.validateTable(table);
-        const client = this.getClient(token);
         if (!query.filter_field) {
             throw new common_1.BadRequestException('filter_field required for DELETE');
         }
@@ -129,7 +115,6 @@ let CrudService = class CrudService {
 };
 exports.CrudService = CrudService;
 exports.CrudService = CrudService = __decorate([
-    (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [supabase_service_1.SupabaseService])
+    (0, common_1.Injectable)()
 ], CrudService);
 //# sourceMappingURL=crud.service.js.map
