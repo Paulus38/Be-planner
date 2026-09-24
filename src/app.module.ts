@@ -5,16 +5,21 @@ import { CrudModule } from './crud/crud.module';
 import { SeedModule } from './seed/seed.module';
 import { AuthMiddleware } from './common/auth.middleware';
 import { HealthController } from './common/health.controller';
+import { HealthService } from './common/health.service';
 
 @Module({
   imports: [AuthModule, DataModule, CrudModule, SeedModule],
   controllers: [HealthController],
+  providers: [HealthService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AuthMiddleware)
-      .exclude({ path: 'auth/(.*)', method: RequestMethod.ALL }, { path: 'health', method: RequestMethod.GET })
+      .exclude(
+        { path: 'auth/(.*)', method: RequestMethod.ALL },
+        { path: 'health', method: RequestMethod.ALL }, // 👈 Đổi sang RequestMethod.ALL để chặn mọi method vào health
+      )
       .forRoutes('data', 'seed', ':table');
   }
 }
