@@ -1,15 +1,8 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+import { apiFetch } from '@/lib/api';
 
 export async function seedDefaultDataForUser(_userId: string) {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('sb-access-token') : null;
-  const res = await fetch(`${API_URL}/seed`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-  if (!res.ok) {
-    throw new Error('Failed to seed data');
+  const result = await apiFetch('/seed', { method: 'POST' });
+  if (result.error) {
+    throw new Error(result.error);
   }
 }
