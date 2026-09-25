@@ -3,7 +3,7 @@
 
 ## Overview
 Creates the full database schema for a personal study planning application
-designed for a seminarian (chủng sinh/thỉnh sinh). This is a single-user app
+designed for a seminarian. This is a single-user app
 with no authentication — all data belongs to one user and is accessible via
 the anon key.
 
