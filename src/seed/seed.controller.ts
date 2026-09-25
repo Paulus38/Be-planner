@@ -16,6 +16,10 @@ export class SeedController {
 
   @Get('templates')
   async getTemplates() {
+    if (!this.supabaseService.hasServiceRoleKey) {
+      return { error: 'Missing SUPABASE_SERVICE_ROLE_KEY on the backend' };
+    }
+
     const { data, error } = await this.supabaseService.serviceClient
       .from('sample_templates')
       .select('id, name, is_default')
@@ -27,6 +31,10 @@ export class SeedController {
 
   @Get('template')
   async getTemplate(@Query('id') id: string) {
+    if (!this.supabaseService.hasServiceRoleKey) {
+      return { error: 'Missing SUPABASE_SERVICE_ROLE_KEY on the backend' };
+    }
+
     const client = this.supabaseService.serviceClient;
     let query = client.from('sample_templates').select('id, name, template_data');
     if (id) {

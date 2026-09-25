@@ -10,7 +10,7 @@ import { HealthController } from './common/health.controller';
 import { HealthService } from './common/health.service';
 
 @Module({
-  imports: [AuthModule, DataModule, CrudModule, SeedModule],
+  imports: [AuthModule, DataModule, SeedModule, CrudModule],
   controllers: [HealthController],
   providers: [HealthService,JwtService, SupabaseService],
 })

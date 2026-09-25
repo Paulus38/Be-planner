@@ -9,6 +9,7 @@ export class SupabaseService {
   private readonly serviceRoleKey: string;
   readonly client: SupabaseClient;
   readonly serviceClient: SupabaseClient;
+  readonly hasServiceRoleKey: boolean;
 
   constructor() {
     if (typeof globalThis.WebSocket === 'undefined') {
@@ -18,6 +19,7 @@ export class SupabaseService {
     this.url = process.env.SUPABASE_URL as string;
     this.anonKey = process.env.SUPABASE_ANON_KEY as string;
     this.serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
+    this.hasServiceRoleKey = Boolean(this.serviceRoleKey);
 
     if (!this.url || !this.anonKey) {
       throw new Error('Missing SUPABASE_URL or SUPABASE_ANON_KEY');
