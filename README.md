@@ -45,6 +45,24 @@ npm run build
 npm start
 ```
 
+## Logging và chẩn đoán lỗi
+
+Backend ghi log trực tiếp ra stdout/stderr theo logger mặc định của NestJS. Khi chạy `npm run dev`, terminal sẽ hiển thị:
+
+- Mỗi request: method, URL, HTTP status, thời gian xử lý và user ID nếu đã xác thực.
+- Request lỗi 4xx ở mức `WARN`, lỗi 5xx ở mức `ERROR`.
+- Exception chưa được xử lý: message và stack trace.
+- Lỗi khởi động, `unhandledRejection` và `uncaughtException`.
+
+Ví dụ:
+
+```text
+[HTTP] GET /api/data 200 42ms user=...
+[Exceptions] POST /api/seed 500 - ...
+```
+
+Không ghi access token hoặc mật khẩu vào log. Khi báo lỗi, nên cung cấp thời điểm, endpoint, status code và đoạn log tương ứng.
+
 ## Biến môi trường
 
 | Biến | Bắt buộc | Mô tả |

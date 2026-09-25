@@ -8,6 +8,7 @@ import { JwtService } from './common/jwt.service';
 import { SupabaseService } from './common/supabase.service';
 import { HealthController } from './common/health.controller';
 import { HealthService } from './common/health.service';
+import { RequestLoggingMiddleware } from './common/request-logging.middleware';
 
 @Module({
   imports: [AuthModule, DataModule, SeedModule, CrudModule],
@@ -16,6 +17,10 @@ import { HealthService } from './common/health.service';
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(RequestLoggingMiddleware)
+      .forRoutes('*');
+
     consumer
       .apply(AuthMiddleware)
       .exclude(
