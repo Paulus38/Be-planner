@@ -48,10 +48,10 @@ export class SeedController {
   }
 
   @Post()
-  async seed(@Req() req: SeedRequest, @Body() body: { template_id?: string }) {
+  async seed(@Req() req: SeedRequest, @Body() body: { template_id?: string; customize?: boolean }) {
     if (!req.userId) {
       return { error: 'Not authenticated' };
     }
-    return this.seedService.seedFromTemplate(req.userId, body?.template_id);
+    return this.seedService.seedFromTemplate(req.userId, body?.template_id, body?.customize === true);
   }
 }

@@ -14,7 +14,7 @@ function parseTimeRange(time: string): { start: string; end: string } {
 export class SeedService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
-  async seedFromTemplate(userId: string, templateId?: string) {
+  async seedFromTemplate(userId: string, templateId?: string, customize = false) {
     const client = this.supabaseService.serviceClient;
 
     const { data: existingSettings } = await client
@@ -44,17 +44,17 @@ export class SeedService {
       template = data?.template_data;
     }
 
-    if (!template) {
+    if (!template && !customize) {
       return { success: false, message: 'No template found' };
     }
 
     const t = template;
-    const profile = t.profile || {};
+    const profile = t?.profile || {};
 
     await client.from('settings').insert({
       user_id: userId,
-      wake_time: profile.timezone ? '04:25' : '04:25',
-      sleep_time: t.sleep_schedule?.sleep || '21:45',
+      wake_time: profile.timezone ? '04:25' : '06:30',
+      sleep_time: t?.sleep_schedule?.sleep || '22:00',
       mass_time_start: '04:45',
       mass_time_end: '06:00',
       breakfast_start: '06:00',
@@ -76,11 +76,22 @@ export class SeedService {
       self_study_end: '21:10',
       session_duration_min: 45,
       break_duration_min: 10,
-      english_target_pct: t.goals?.english_ratio_target || 50,
-      journal_min_min: t.goals?.journal_min_minutes_per_day || 15,
+      english_target_pct: t?.goals?.english_ratio_target || 50,
+      journal_min_min: t?.goals?.journal_min_minutes_per_day || 15,
     });
 
-    const fixedSchedule = t.fixed_daily_schedule || [];
+    const fixedSchedule = t?.fixed_daily_schedule || [
+      { name: 'Thức dậy', start: '06:30', end: '06:45', type: 'fixed' },
+      { name: 'Ăn sáng', start: '06:45', end: '07:15', type: 'meal' },
+      { name: 'Học buổi sáng', start: '07:30', end: '11:30', type: 'study' },
+      { name: 'Ăn trưa', start: '11:30', end: '12:00', type: 'meal' },
+      { name: 'Nghỉ trưa', start: '12:00', end: '13:30', type: 'rest' },
+      { name: 'Học buổi chiều', start: '14:00', end: '16:30', type: 'study' },
+      { name: 'Thể thao', start: '16:30', end: '17:30', type: 'sports' },
+      { name: 'Ăn tối', start: '18:00', end: '18:45', type: 'meal' },
+      { name: 'Tự học buổi tối', start: '19:30', end: '21:10', type: 'self_study' },
+      { name: 'Đi ngủ', start: '22:00', end: '22:15', type: 'sleep' },
+    ];
     const activities = fixedSchedule.map((item: any, idx: number) => ({
       name: item.name,
       start_time: item.start,
@@ -93,8 +104,20 @@ export class SeedService {
       await client.from('fixed_activities').insert(activities);
     }
 
-    const personalSubjects = t.personal_study_subjects || [];
-    const otherActivities = t.other_study_activities || [];
+    if (customize) {
+      await client
+        .from('users')
+        .update({ has_sample_data: true, onboarding_completed: true, updated_at: new Date().toISOString() })
+        .eq('id', userId);
+
+      return {
+        success: true,
+        message: 'Default daily schedule created successfully',
+      };
+    }
+
+    const personalSubjects = t?.personal_study_subjects || [];
+    const otherActivities = t?.other_study_activities || [];
     const allSubjects = [...personalSubjects, ...otherActivities];
 
     const subjectsToInsert = allSubjects.map((s: any, idx: number) => ({
@@ -113,7 +136,7 @@ export class SeedService {
       await client.from('study_subjects').insert(subjectsToInsert);
     }
 
-    const classSchedule = t.official_class_schedule || [];
+    const classSchedule = t?.official_class_schedule || [];
     const scheduleToInsert: any[] = [];
     let sortOrder = 0;
     for (const cls of classSchedule) {
@@ -137,18 +160,18 @@ export class SeedService {
       await client.from('schedule_entries').insert(scheduleToInsert);
     }
 
-    const planningRules = t.planning_rules || {};
+    const planningRules = t?.planning_rules || {};
     const configKeys: Record<string, any> = {
-      goals: t.goals || {},
+      goals: t?.goals || {},
       planning_rules: planningRules,
-      priority_rules: t.priority_rules || [],
-      weekly_personal_study_plan: t.weekly_personal_study_plan || {},
-      weekly_personal_study_target: t.weekly_personal_study_target || {},
-      evening_study_slots: t.evening_study_slots || [],
-      weekly_review: t.weekly_review || {},
-      monthly_review: t.monthly_review || {},
-      semester: t.semester || {},
-      sleep_schedule: t.sleep_schedule || {},
+      priority_rules: t?.priority_rules || [],
+      weekly_personal_study_plan: t?.weekly_personal_study_plan || {},
+      weekly_personal_study_target: t?.weekly_personal_study_target || {},
+      evening_study_slots: t?.evening_study_slots || [],
+      weekly_review: t?.weekly_review || {},
+      monthly_review: t?.monthly_review || {},
+      semester: t?.semester || {},
+      sleep_schedule: t?.sleep_schedule || {},
     };
 
     const configRows = Object.entries(configKeys).map(([key, value]) => ({
