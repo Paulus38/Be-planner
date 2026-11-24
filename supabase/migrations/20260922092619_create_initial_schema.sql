@@ -202,6 +202,7 @@ CREATE INDEX IF NOT EXISTS idx_study_sessions_date ON study_sessions(date);
 CREATE TABLE IF NOT EXISTS journal_entries (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   entry_date date NOT NULL UNIQUE,
+  daily_summary text,
   grateful_for text,
   good_deed text,
   needs_improvement text,
